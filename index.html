@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>التقاط صورة</title>
+</head>
+<body>
+  <h1>التقاط صورة</h1>
+  <video id="video" autoplay playsinline style="width: 100%; max-width: 300px;"></video>
+  <button id="capture">التقاط الصورة</button>
+  <canvas id="canvas" style="display: none;"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureButton = document.getElementById('capture');
+
+    // تشغيل الكاميرا
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error('خطأ في تشغيل الكاميرا:', err);
+        alert('لم نتمكن من الوصول إلى الكاميرا.');
+      });
+
+    // التقاط الصورة وإرسالها إلى الخادم
+    captureButton.addEventListener('click', () => {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // تحويل الصورة إلى base64
+      const imageData = canvas.toDataURL('image/png');
+
+      // إرسال الصورة إلى الخادم
+      fetch('https://your-server-url/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ image: imageData })
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('تم إرسال الصورة بنجاح.');
+        } else {
+          alert('حدث خطأ أثناء إرسال الصورة.');
+        }
+      })
+      .catch(error => console.error('خطأ:', error));
+    });
+  </script>
+</body>
+</html>
